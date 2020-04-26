@@ -27,4 +27,4 @@ while not done:
 
 ```
 # Result :
-![Demo](Demo.gif)
+![Demo](demo.gif)
