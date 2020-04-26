@@ -49,7 +49,7 @@ class PyBoyEnv(Env):
             16: WindowEvent.PASS
         }
         self.action_space = Discrete(len(self.actions))
-        self.observation_space = Box(low=0, high=255, shape=(160, 144, 3), dtype=np.uint32)
+        self.observation_space = Box(low=0, high=255, shape=(160, 144, 3), dtype=np.uint8)
         # Format : {"addr":<address> "op":<operator> "reward":<reward> "val":<latest value>}
         self._reward_rules = list()
         self._refresh_values()
@@ -63,7 +63,7 @@ class PyBoyEnv(Env):
     def _get_observation(self):
         """ Returns screen
         """
-        return np.asarray(self._screen.screen_ndarray(), dtype=np.uint32)
+        return np.asarray(self._screen.screen_ndarray(), dtype=np.uint8)
 
     def _get_reward(self):
         """ Use reward rules in order to create reward
