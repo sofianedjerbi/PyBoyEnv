@@ -53,12 +53,13 @@ class PyBoyEnv(Env):
         # Format :
         # {'addr':<address>, 'op':<operator>, 'reward':<reward>, 'val':<latest value>, 'lab':<label>}
         self._reward_rules = list()
+        self._done_rules = list()
         self._refresh_values()
 
     def _refresh_values(self):
         """ Refresh values for each rule
         """
-        for x in self._reward_rules:
+        for x in self._reward_rules + self._done_rules:
             x['val'] = self._pyboy.get_memory_value(x['addr'])
 
     def _get_observation(self):
@@ -66,60 +67,79 @@ class PyBoyEnv(Env):
         """
         return np.asarray(self._screen.screen_ndarray(), dtype=np.uint8)
 
-    def _get_reward(self):
-        """ Use reward rules in order to create reward
+    def _handle_rule(self, rule):
+        if rule['rule_type'] == 'reward':
+            done = False
+            reward = rule['reward'] # Set reward and label
+            label = [rule['lab'], rule['reward']]
+        elif rule['rule_type'] == 'done':
+            done = True
+            reward = 0
+            label = [rule['lab'], "Done"]
+        return reward, done, label
+
+
+    def _scan_memory(self):
+        """ Scan memory in order to apply rules
         """
-        r = 0
-        lab = []
-        for x in self._reward_rules:
+        reward = 0
+        done = False
+        label = list()
+        for x in self._reward_rules + self._done_rules:
+            r, d, lab = 0, False, None
             if 'increase' in x['op']: # INCREASE
                 if x['val'] < self._pyboy.get_memory_value(x['addr']):
-                    r += x['reward'] # Set reward and label
-                    lab.append([x['lab'], x['reward']])
+                    r, d, lab = self._handle_rule(x)
             elif 'decrease' in x['op']: # DECREASE
                 if x['val'] > self._pyboy.get_memory_value(x['addr']):
-                    r += x['reward']
-                    lab.append([x['lab'], x['reward']])
+                    r, d, lab = self._handle_rule(x)
             elif 'equal' in x['op']: # EQUAL
                 if self._pyboy.get_memory_value(x['addr']) == int(x['op'].split()[1]):
-                    r += x['reward']
-                    lab.append([x['lab'], x['reward']])
+                    r, d, lab = self._handle_rule(x)
             elif 'bigger' in x['op'] or 'greater' in x['op']: # BIGGER
                 if self._pyboy.get_memory_value(x['addr']) > int(x['op'].split()[1]):
-                    r += x['reward']
-                    lab.append([x['lab'], x['reward']])
+                    r, d, lab = self._handle_rule(x)
             elif 'smaller' in x['op'] or 'less' in x['op']: # SMALLER
                 if self._pyboy.get_memory_value(x['addr']) < int(x['op'].split()[1]):
-                    r += x['reward']
-                    lab.append([x['lab'], x['reward']])
+                    r, d, lab = self._handle_rule(x)
             elif 'in' in x['op']: # IN
-                for i in x['op'].split(' ')[1].split(','):
-                    if self._pyboy.get_memory_value(x['addr']) == int(i):
-                        r += x['reward']
-                        lab.append([x['lab'], x['reward']])
+                if self._pyboy.get_memory_value(x['addr']) in x['op'].split(' ')[1].split(','):
+                    r, d, lab = self._handle_rule(x)
             else:
                 raise ValueError(f"Invalid custom reward operator: {x['op']}")
+            reward += r
+            done = done or d
+            label.append(lab) if lab is not None else None
         self._refresh_values()
-        return r, lab
+        return reward, done, label
 
     def set_reward_rule(self, address, operator, reward, label):
         # More user friendly ?
-        self._reward_rules.append({'addr': address,
+        self._reward_rules.append({'rule_type': 'reward',
+                                   'addr': address,
                                    'op': operator,
-                                   'reward': reward, 
+                                   'reward': reward,
                                    'val': 0,
                                    'lab': label})
+
+     # No reward here but some action to pass screen etc if needed ?
+    def set_done_rule(self, address, operator, label):
+        self._done_rules.append({'rule_type': 'done',
+                                 'addr': address,
+                                 'op': operator,
+                                 'val': 0,
+                                 'lab': label})
 
     def step(self, action_id): # same thing as gymboy (no toggle)
         action = self.actions[action_id]
         self._pyboy.send_input(action)
-        done = self._pyboy.tick()
-        reward, info = self._get_reward()
+        done_tick = self._pyboy.tick()
+        reward, done, info = self._scan_memory()
         obs = self._get_observation()
-        return obs, reward, done, info
+        return obs, reward, done or done_tick, info
 
     def reset(self): # ?? Done rules ??
         return self._get_observation()
 
-    def render(self): # ??
+    def render(self): # there's a way to toggle visible screen??
         pass
