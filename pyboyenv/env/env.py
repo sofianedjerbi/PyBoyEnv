@@ -52,7 +52,7 @@ class PyBoyEnv(Env):
         self.observation_space = Box(low=0, high=255, shape=(160, 144, 3), dtype=np.uint32)
         # Format : {"addr":<address> "op":<operator> "reward":<reward> "val":<latest value>}
         self._reward_rules = list()
-        #self._refresh_values()
+        self._refresh_values()
 
     def _refresh_values(self):
         """ Refresh values for each rule
