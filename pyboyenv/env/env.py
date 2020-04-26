@@ -50,7 +50,8 @@ class PyBoyEnv(Env):
         }
         self.action_space = Discrete(len(self.actions))
         self.observation_space = Box(low=0, high=255, shape=(160, 144, 3), dtype=np.uint8)
-        # Format : {"addr":<address> "op":<operator> "reward":<reward> "val":<latest value>}
+        # Format :
+        # {'addr':<address>, 'op':<operator>, 'reward':<reward>, 'val':<latest value>, 'lab':<label>}
         self._reward_rules = list()
         self._refresh_values()
 
@@ -69,40 +70,53 @@ class PyBoyEnv(Env):
         """ Use reward rules in order to create reward
         """
         r = 0
+        lab = []
         for x in self._reward_rules:
-            if 'increase' in x['op']:
+            if 'increase' in x['op']: # INCREASE
                 if x['val'] < self._pyboy.get_memory_value(x['addr']):
-                    r += x['reward']
-            elif 'decrease' in x['op']:
+                    r += x['reward'] # Set reward and label
+                    lab.append([x['lab'], x['reward']])
+            elif 'decrease' in x['op']: # DECREASE
                 if x['val'] > self._pyboy.get_memory_value(x['addr']):
                     r += x['reward']
-            elif 'equal' in x['op']:
+                    lab.append([x['lab'], x['reward']])
+            elif 'equal' in x['op']: # EQUAL
                 if self._pyboy.get_memory_value(x['addr']) == int(x['op'].split()[1]):
                     r += x['reward']
-            elif 'bigger' in x['op'] or 'greater' in x['op']:
+                    lab.append([x['lab'], x['reward']])
+            elif 'bigger' in x['op'] or 'greater' in x['op']: # BIGGER
                 if self._pyboy.get_memory_value(x['addr']) > int(x['op'].split()[1]):
                     r += x['reward']
-            elif 'smaller' in x['op'] or 'less' in x['op']:
+                    lab.append([x['lab'], x['reward']])
+            elif 'smaller' in x['op'] or 'less' in x['op']: # SMALLER
                 if self._pyboy.get_memory_value(x['addr']) < int(x['op'].split()[1]):
                     r += x['reward']
-            elif 'in' in x['op']:
+                    lab.append([x['lab'], x['reward']])
+            elif 'in' in x['op']: # IN
                 for i in x['op'].split(' ')[1].split(','):
                     if self._pyboy.get_memory_value(x['addr']) == int(i):
-                        print("ok")
                         r += x['reward']
+                        lab.append([x['lab'], x['reward']])
             else:
                 raise ValueError(f"Invalid custom reward operator: {x['op']}")
         self._refresh_values()
-        return r
+        return r, lab
 
-    def set_reward_rule(self, address, operator, reward):
+    def set_reward_rule(self, address, operator, reward, label):
         # More user friendly ?
-        self._reward_rules.append({"addr": address, "op": operator, "reward": reward, "val": 0})
+        self._reward_rules.append({'addr': address,
+                                   'op': operator,
+                                   'reward': reward, 
+                                   'val': 0,
+                                   'lab': label})
 
     def step(self, action_id): # same thing as gymboy (no toggle)
         action = self.actions[action_id]
         self._pyboy.send_input(action)
-        return self._get_observation(), self._get_reward(), self._pyboy.tick(), {}
+        done = self._pyboy.tick()
+        reward, info = self._get_reward()
+        obs = self._get_observation()
+        return obs, reward, done, info
 
     def reset(self): # ?? Done rules ??
         return self._get_observation()
