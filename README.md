@@ -2,7 +2,7 @@
 This package allow you to turn any gameboy memory event into a reinforcement learning environment rule.
 
 <p align="center">
-    <img src="demo.gif">
+    <img src="demo.gif"><br/>
     (generated with test.py)
 </p>
 
