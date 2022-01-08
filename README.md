@@ -2,7 +2,8 @@
 This package allow you to turn any gameboy memory event into a reinforcement learning environment rule.
 
 <p align="center">
-  <img src="demo.gif">
+    <img src="demo.gif">
+    (generated with test.py)
 </p>
 
 ## Installation
@@ -16,38 +17,6 @@ Install the package with `pip`:
 
 ```bash
 pip install ./
-```
-
-## Example
-This produces the above result:
-```python
-import gym
-import pyboyenv
-
-env = gym.make('PyBoy-v0', game='DX.gbc', visible=True)
-
-env.set_reward_rule(0xDB5A, 'increase', 1, "Health") # Label ('health') is not required
-env.set_reward_rule(0xDB5A, 'decrease', -1, "Health") # Health
-env.set_reward_rule(0xDB5E, 'increase', 1, "Money") # Money
-env.set_reward_rule(0xDB45, 'increase', 1, "Arrows") # Arrows
-env.set_reward_rule(0xDB4D, 'increase', 1, "Bombs") # Bombs
-env.set_reward_rule(0xDBD0, 'increase', 1, "Keys") # Keys
-env.set_reward_rule(0xDBCF, 'increase', 5, "Big Keys") # Big Keys
-env.set_reward_rule(0xD368, 'equals 3', -25, "Death") # Death
-env.set_reward_rule(0xD360, 'equals 3', 1, "Hit Enemy") # Hit enemy
-env.set_reward_rule(0xD360, 'equals 1', 2, "Loot") # Loot
-env.set_reward_rule(0xD368, 'in 59,15,16,21,49,24,25,27,30,33,34,39', 25, "Event") # Events
-env.set_done_rule(0xD368, 'equals 3', "Death") # Done if player dies
-
-env.reset()
-
-cumul = 0
-done = False
-while not done:
-    state, reward, done, info = env.step(16) # 16 = nothing..
-    cumul += reward
-    for i in info:
-        print(f"{i[0]}: {i[1]}")
 ```
 
 ## Quickstart 
@@ -68,4 +37,38 @@ env.set_reward_rule(ADDRESS, TYPE, VALUE, LABEL)
 # - bigger X: add VALUE if the memory at the address ADDRESS is bigger than X
 # - equals X: add VALUE if the memory at the address ADDRESS equals X
 # - in X1,..,XN: add VALUE if the memory at the address ADDRESS is equal to X1 or ... or XN
+
+# Useful values
+cumul = 0 # Sum of rewards 
+done = False # Is the game done ?
+action = 16 # Initial action (action list available below, 16=nothing)
+
+# Game loop
+while not done:
+    # State = Window screen
+    state, reward, done, info = env.step(action)
+    cumul += reward
+    action = Agent.get_action(state, cumul, reward) # Next action
+    # Print infos
+    for i in info:
+        print(f"{i[0]}: {i[1]}")
 ```
+
+## Actions
+- 0: `WindowEvent.PRESS_ARROW_UP`
+- 1: `WindowEvent.PRESS_ARROW_DOWN`
+- 2: `WindowEvent.PRESS_ARROW_LEFT`
+- 3: `WindowEvent.PRESS_ARROW_RIGHT`
+- 4: `WindowEvent.PRESS_BUTTON_A`
+- 5: `WindowEvent.PRESS_BUTTON_B`
+- 6: `WindowEvent.PRESS_BUTTON_SELECT`
+- 7: `WindowEvent.PRESS_BUTTON_START`
+- 8: `WindowEvent.RELEASE_ARROW_UP`
+- 9: `WindowEvent.RELEASE_ARROW_DOWN`
+- 10: `WindowEvent.RELEASE_ARROW_LEFT`
+- 11: `WindowEvent.RELEASE_ARROW_RIGHT`
+- 12: `WindowEvent.RELEASE_BUTTON_A`
+- 13: `WindowEvent.RELEASE_BUTTON_B`
+- 14: `WindowEvent.RELEASE_BUTTON_SELECT`
+- 15: `WindowEvent.RELEASE_BUTTON_START`
+- 16: `WindowEvent.PASS`
