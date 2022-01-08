@@ -1,4 +1,17 @@
-# Example:
+# PyBoyEnv
+This package allow you to turn any gameboy memory event into a reinforcement learning environment rule.
+
+## Result :
+![Demo](demo.gif)
+
+## Installation
+Install the dependencies:
+```pip install -r requirements.txt```
+Install the package with `pip`:
+```pip install ./```
+
+## Example
+This produces the above result:
 ```python
 import gym
 import pyboyenv
@@ -18,6 +31,8 @@ env.set_reward_rule(0xD360, 'equals 1', 2, "Loot") # Loot
 env.set_reward_rule(0xD368, 'in 59,15,16,21,49,24,25,27,30,33,34,39', 25, "Event") # Events
 env.set_done_rule(0xD368, 'equals 3', "Death") # Done if player dies
 
+env.reset()
+
 cumul = 0
 done = False
 while not done:
@@ -26,5 +41,3 @@ while not done:
     for i in info:
         print(f"{i[0]}: {i[1]}")
 ```
-# Result :
-![Demo](demo.gif)

@@ -16,6 +16,9 @@ env.set_reward_rule(0xD360, 'equals 1', 2, "Loot") # Loot
 env.set_reward_rule(0xD368, 'in 59,15,16,21,49,24,25,27,30,33,34,39', 25, "Event") # Events
 env.set_done_rule(0xD368, 'equals 3', "Death") # Done if player dies
 
+
+env.reset()
+
 cumul = 0
 done = False
 while not done:
