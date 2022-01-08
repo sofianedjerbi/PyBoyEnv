@@ -1,14 +1,22 @@
 # PyBoyEnv
 This package allow you to turn any gameboy memory event into a reinforcement learning environment rule.
 
-## Result :
-![Demo](demo.gif)
+<p align="center">
+  <img src="demo.gif">
+</p>
 
 ## Installation
 Install the dependencies:
-```pip install -r requirements.txt```
+
+```bash
+pip install -r requirements.txt
+```
+
 Install the package with `pip`:
-```pip install ./```
+
+```bash
+pip install ./
+```
 
 ## Example
 This produces the above result:
@@ -40,4 +48,24 @@ while not done:
     cumul += reward
     for i in info:
         print(f"{i[0]}: {i[1]}")
+```
+
+## Quickstart 
+```python
+import gym
+import pyboyenv
+
+# Create the environment
+env = gym.make('Pyboy-v0', game=<FILE>)
+
+# Add rules
+env.set_reward_rule(ADDRESS, TYPE, VALUE, LABEL)
+
+# Available rules:
+# - increase: add VALUE if the memory at the address ADDRESS increases
+# - decrease: add VALUE if the memory at the address ADDRESS decreases
+# - smaller X: add VALUE if the memory at the address ADDRESS is smaller than X
+# - bigger X: add VALUE if the memory at the address ADDRESS is bigger than X
+# - equals X: add VALUE if the memory at the address ADDRESS equals X
+# - in X1,..,XN: add VALUE if the memory at the address ADDRESS is equal to X1 or ... or XN
 ```
