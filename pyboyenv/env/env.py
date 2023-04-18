@@ -87,22 +87,22 @@ class PyBoyEnv(Env):
         label = list()
         for x in self._reward_rules + self._done_rules:
             r, d, lab = 0, False, None
-            if 'increase' in x['op']: # INCREASE
+            if x['op'] == 'increase': # INCREASE
                 if x['val'] < self._pyboy.get_memory_value(x['addr']):
                     r, d, lab = self._handle_rule(x)
-            elif 'decrease' in x['op']: # DECREASE
+            elif x['op'] == 'decrease': # DECREASE
                 if x['val'] > self._pyboy.get_memory_value(x['addr']):
                     r, d, lab = self._handle_rule(x)
-            elif 'equal' in x['op']: # EQUAL
+            elif  x['op'] == 'equal' : # EQUAL
                 if self._pyboy.get_memory_value(x['addr']) == int(x['op'].split()[1]):
                     r, d, lab = self._handle_rule(x)
-            elif 'bigger' in x['op'] or 'greater' in x['op']: # BIGGER
+            elif x['op'] == 'bigger' or x['op']== 'greater': # BIGGER
                 if self._pyboy.get_memory_value(x['addr']) > int(x['op'].split()[1]):
                     r, d, lab = self._handle_rule(x)
-            elif 'smaller' in x['op'] or 'less' in x['op']: # SMALLER
+            elif  x['op'] == 'smaller' or x['op'] == 'less' : # SMALLER
                 if self._pyboy.get_memory_value(x['addr']) < int(x['op'].split()[1]):
                     r, d, lab = self._handle_rule(x)
-            elif 'in' in x['op']: # IN
+            elif x['op'] == in: # IN
                 if self._pyboy.get_memory_value(x['addr']) in x['op'].split(' ')[1].split(','):
                     r, d, lab = self._handle_rule(x)
             else:
@@ -113,11 +113,11 @@ class PyBoyEnv(Env):
         self._refresh_values()
         return reward, done, label
 
-    def set_reward_rule(self, address, operator, reward, label):
+    def set_reward_rule(self, address, operator:str, reward, label:str):
         # More user friendly ?
         self._reward_rules.append({'rule_type': 'reward',
                                    'addr': address,
-                                   'op': operator,
+                                   'op': operator.lower(),
                                    'reward': reward,
                                    'val': 0,
                                    'lab': label})
